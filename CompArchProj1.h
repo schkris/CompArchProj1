@@ -26,6 +26,14 @@ struct functReturn
 	bool shamtNeeded = false;
 };
 
+// Needs an extra bool because the printing format varies between offset and just normal immediate value
+struct opcodeReturn
+{
+	string returnLine = "";
+	bool errorFound = false;
+	bool offset = false;
+};
+
 // Labels for i type and r type instructions
 enum class instructFormat {i_type, r_type};
 
@@ -54,7 +62,7 @@ disReturn rDecoder(string binaryLine);
 disReturn iDecoder(string binaryLine, string opcode);
 
 // Converts 2 hex digits into an I-instruction opcode, also checks for invalid opcode
-disReturn hexOpcode(char hex1, char hex2);
+opcodeReturn hexOpcode(char hex1, char hex2);
 
 // Finds the funct from the binary value, finds if shamt or a 3rd register is assessed, spits out an error if not a valid funct
 functReturn findfunct(string funct);

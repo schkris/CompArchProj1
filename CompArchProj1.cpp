@@ -214,8 +214,8 @@ disReturn rDecoder(string binaryLine)
         rtRet = registerVal(rt);
         shamtRet = shamtVal(shamt);
         disassembleRet.returnLine.append(" " + rdRet.returnLine);
-        disassembleRet.returnLine.append(" " + rtRet.returnLine);
-        disassembleRet.returnLine.append(" " + to_string(shamtRet));
+        disassembleRet.returnLine.append(", " + rtRet.returnLine);
+        disassembleRet.returnLine.append(", " + to_string(shamtRet));
     }
     else
     {
@@ -224,8 +224,8 @@ disReturn rDecoder(string binaryLine)
         rsRet = registerVal(rs);
         rtRet = registerVal(rt);
         disassembleRet.returnLine.append(" " + rdRet.returnLine);
-        disassembleRet.returnLine.append(" " + rsRet.returnLine);
-        disassembleRet.returnLine.append(" " + rtRet.returnLine);
+        disassembleRet.returnLine.append(", " + rsRet.returnLine);
+        disassembleRet.returnLine.append(", " + rtRet.returnLine);
     }
 
 
@@ -245,7 +245,7 @@ disReturn iDecoder(string binaryLine, string opcode)
     string immediateStr = binaryLine.substr(16, 16);
     int immNum;
     disReturn disassembleRet;
-    disReturn opcodeRet;
+    opcodeReturn opcodeRet;
     disassembleRet.returnLine = "";
 
     // Converts opcode into 2 hex characters for further assessment
@@ -276,17 +276,26 @@ disReturn iDecoder(string binaryLine, string opcode)
     // Finds the immediate value
     immNum = immVal(immediateStr);
     
-    // Adds the immediate value and rs
-    disassembleRet.returnLine.append(" " + to_string(immNum));
-    disassembleRet.returnLine.append("(" + rtRet.returnLine + ")");
+    if (opcodeRet.offset == true)
+    {
+        // Adds the immediate value and rs in parenthesis
+        disassembleRet.returnLine.append(", " + to_string(immNum));
+        disassembleRet.returnLine.append("(" + rsRet.returnLine + ")");
+    }
+    else
+    {
+        // Normal format, just register, immediate
+        disassembleRet.returnLine.append(", " + rsRet.returnLine);
+        disassembleRet.returnLine.append(", " + to_string(immNum));
+    }
 
     return disassembleRet;
 }
 
 
-disReturn hexOpcode(char hex1, char hex2)
+opcodeReturn hexOpcode(char hex1, char hex2)
 {
-    disReturn opcodeRet;
+    opcodeReturn opcodeRet;
     if (hex1 == '0')
     {
         if (hex2 == '4')
@@ -362,6 +371,7 @@ disReturn hexOpcode(char hex1, char hex2)
             opcodeRet.returnLine = "Opcode not found";
             opcodeRet.errorFound = true;
         }
+        opcodeRet.offset = true;
     }
     else if (hex1 == '3')
     {
@@ -378,6 +388,7 @@ disReturn hexOpcode(char hex1, char hex2)
             opcodeRet.returnLine = "Opcode not found";
             opcodeRet.errorFound = true;
         }
+        opcodeRet.offset = true;
     }
     else
     {
@@ -411,7 +422,7 @@ disReturn registerVal(string reg)
     // Takes in register number and outputs register string
     regReturn.returnLine = regConvert(regNum);
 
-    cout << regReturn.returnLine << endl;
+    //cout << regReturn.returnLine << endl;
     return regReturn;
 }
 
@@ -598,9 +609,9 @@ functReturn findfunct(string funct)
         {
             funct = "slt";
         }
-        else if (hex2 == 'sltu') // 0 / 2b
+        else if (hex2 == 'b') // 0 / 2b
         {
-            funct = "srl";
+            funct = "sltu";
         }
         else
         {
@@ -616,7 +627,7 @@ functReturn findfunct(string funct)
     }
 
     functRet.returnLine = funct;
-    cout << funct << endl;
+    //cout << funct << endl;
 
     return functRet;
 }
