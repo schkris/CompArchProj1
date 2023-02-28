@@ -11,6 +11,7 @@ int main()
     string fileAsm;
     string instructList;
     string hexList;
+    string onlyInstructions;
     disReturn disassembleRet; // The disassembleLine function return struct (a bool and string)
     bool errorsPres = false; // If errors are present in the file set to true
     int lineNum = 0; // Keeps track of the line number
@@ -36,15 +37,17 @@ int main()
         return 1;
     }
 
-    /*while (getline(objStream, line))
+    while (getline(objStream, line))
     {
         totalLines++;
     }
-    // Dynamically allocated array of printInstructs with a length of the total lines
-    printInstruct* instructLines = new printInstruct[totalLines];*/
+
+    // After going through file once to count the lines for the dynamic array we must clear and restart at the beginning
+    objStream.clear();
+    objStream.seekg(0, ios_base::beg);
 
     // Goes through each line in the obj file and uses disassembleLine() to disassemble 1 line at a time than prints it to the pre-file string
-    while (std::getline(objStream, line))
+    while (getline(objStream, line))
     {
         disassembleRet = disassembleLine(line);
         if (disassembleRet.errorFound == true)
@@ -54,13 +57,8 @@ int main()
         }
         else
         {
-            // Places the instructions into the array
-            //instructLines[lineNum].instruction = disassembleRet.returnLine;
-            if (disassembleRet.printAddress)
-            {
-                instructList.append("BRANCH\n"); // Probably not needed
-            }
-            instructList.append("\t"+disassembleRet.returnLine + "\n"); // Probably not needed
+            // Places the instructions into ponds onlyInstructions string
+            onlyInstructions.append("\t" + disassembleRet.returnLine + "\n");
         }
         lineNum++;
     }
@@ -68,18 +66,22 @@ int main()
     //If an error is encountered the string is not translated to the .asm file
     if (disassembleRet.errorFound == false)
     {
-        // If no errors are found, creates the .asm file and uploads the string to it
         ofstream asmStream(fileAsm);
         if (!asmStream.is_open())
         {
             cout << "Failed to open .asm file!" << endl;
+            return 1;
         }
-        else
+        asmStream << onlyInstructions;
+        /*
+        asmStream.clear();
+        asmStream.seekp(0, ios_base::beg);
+        while (getline(input_file, line)) 
         {
-            cout << instructList << endl;
-            asmStream << instructList;
-            asmStream.close();
-        }
+            // Split the line into tokens
+            vector<string> tokens = split_line(line);
+        }*/
+        asmStream.close();
     }
     // Closes out files and finishes program
     objStream.close();
@@ -306,8 +308,12 @@ disReturn iDecoder(string binaryLine, string opcode)
     // Finds the immediate value
     immNum = immVal(immediateStr);
     
-    // Translates printAddress variable
-    disassembleRet.printAddress = opcodeRet.printAddress;
+    // Translates printAddress variable, also changes the address Offset to non-zero if the address must be printed
+    if (opcodeRet.printAddress)
+    {
+        disassembleRet.printAddress = opcodeRet.printAddress;
+        disassembleRet.addressOffset = immNum;
+    }
 
     if (opcodeRet.offset == true)
     {

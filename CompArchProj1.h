@@ -17,6 +17,7 @@ struct disReturn
 	string returnLine = "";
 	bool errorFound = false;
 	bool printAddress = false; // true with branch functions
+	int addressOffset = 0;
 };
 
 // Needed an extra bool for funct return to figure out is shamt is assesed
@@ -33,12 +34,13 @@ struct opcodeReturn
 	string returnLine = "";
 	bool errorFound = false;
 	bool offset = false;
-	bool printAddress = false;;
+	bool printAddress = false;
 };
 
 struct printInstruct
 {
 	string instruction = "";
+	int addressOffset = 0;
 	bool printAddress = false; // true with branch functions
 };
 
