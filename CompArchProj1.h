@@ -8,6 +8,8 @@
 #include <string>
 #include <sstream>
 #include <math.h>
+#include <iomanip>
+#include <map>
 
 using namespace std;
 
@@ -44,11 +46,17 @@ struct printInstruct
 	bool printAddress = false; // true with branch functions
 };
 
+struct addressReturn
+{
+	string hexStr = "";
+	bool errorFound = false;
+};
+
 // Labels for i type and r type instructions
 enum class instructFormat {i_type, r_type};
 
 // Algorithm to disasemble the current line while also checking for errors
-disReturn disassembleLine(string line);
+disReturn disassembleLine(string line, int lineNum);
 
 // Algorithm to convert the line into binary while checking that no invalid characters are present
 disReturn convertBinary(string line);
@@ -60,7 +68,7 @@ bool validity(char curr);
 string hexToBinary(char hexChar);
 
 // Converts the binary into instructions while checking that the instruction is valid
-disReturn convertInstruct(string binaryLine);
+disReturn convertInstruct(string binaryLine, int lineNum);
 
 // Takes in opcode and returns instruction type
 instructFormat instructType(string opcode);
@@ -69,7 +77,7 @@ instructFormat instructType(string opcode);
 disReturn rDecoder(string binaryLine);
 
 // Checks i-type instruction in binary form for errors and prints out MIPS equivalent
-disReturn iDecoder(string binaryLine, string opcode);
+disReturn iDecoder(string binaryLine, string opcode, int lineNum);
 
 // Converts 2 hex digits into an I-instruction opcode, also checks for invalid opcode
 opcodeReturn hexOpcode(char hex1, char hex2);
@@ -91,5 +99,8 @@ string regConvert(int regNum);
 
 // Converts binary string to hex char
 char binaryToHex(string binaryStr);
+
+// Creates the address string
+addressReturn addressStrForm(int immNum, int lineNum);
 
 #endif

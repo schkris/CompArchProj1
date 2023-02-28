@@ -16,6 +16,8 @@ int main()
     bool errorsPres = false; // If errors are present in the file set to true
     int lineNum = 0; // Keeps track of the line number
     int totalLines = 0; // Keeps track of number of lines
+    int addressLineNum;
+    map<int, std::string> addMap;
 
     // Prompts the user for the name of the file and stores it
     cout << "Please input the name of the .obj file: " << endl;
@@ -49,7 +51,7 @@ int main()
     // Goes through each line in the obj file and uses disassembleLine() to disassemble 1 line at a time than prints it to the pre-file string
     while (getline(objStream, line))
     {
-        disassembleRet = disassembleLine(line);
+        disassembleRet = disassembleLine(line, lineNum);
         if (disassembleRet.errorFound == true)
         {
             errorsPres = true;
@@ -57,10 +59,26 @@ int main()
         }
         else
         {
-            // Places the instructions into ponds onlyInstructions string
+            // Places the instructions into onlyInstructions string
             onlyInstructions.append("\t" + disassembleRet.returnLine + "\n");
+            // This makes a pair of the string for the address label and the line the label should occur on
+            if (disassembleRet.printAddress) 
+            {
+                addressLineNum = disassembleRet.addressOffset + lineNum + 1;
+                if (addMap.find(addressLineNum) == addMap.end())
+                {
+                    addressReturn temp = addressStrForm(disassembleRet.addressOffset, lineNum);
+                    string label = temp.hexStr;
+                    addMap[addressLineNum] = label;
+                }
+            }
         }
         lineNum++;
+    }
+
+    for (const auto& pair : addMap) 
+    {
+        std::cout << pair.first << " " << pair.second << std::endl;
     }
 
     //If an error is encountered the string is not translated to the .asm file
@@ -73,14 +91,6 @@ int main()
             return 1;
         }
         asmStream << onlyInstructions;
-        /*
-        asmStream.clear();
-        asmStream.seekp(0, ios_base::beg);
-        while (getline(input_file, line)) 
-        {
-            // Split the line into tokens
-            vector<string> tokens = split_line(line);
-        }*/
         asmStream.close();
     }
     // Closes out files and finishes program
@@ -88,7 +98,7 @@ int main()
     return 0;
 }
 
-disReturn disassembleLine(string line)
+disReturn disassembleLine(string line, int lineNum)
 {
     disReturn disassembleRet;
 
@@ -110,7 +120,7 @@ disReturn disassembleLine(string line)
         return disassembleRet;
     }
 
-    disassembleRet = convertInstruct(disassembleRet.returnLine);
+    disassembleRet = convertInstruct(disassembleRet.returnLine, lineNum);
 
     return disassembleRet;
 }
@@ -177,7 +187,7 @@ string hexToBinary(char hexChar)
     return binaryStr;
 }
 
-disReturn convertInstruct(string binaryLine)
+disReturn convertInstruct(string binaryLine, int lineNum)
 {
     disReturn disassembleRet;
     string opcode;
@@ -196,7 +206,7 @@ disReturn convertInstruct(string binaryLine)
     }
     else
     {
-        disassembleRet = iDecoder(binaryLine, opcode);
+        disassembleRet = iDecoder(binaryLine, opcode, lineNum);
     }
 
     return disassembleRet;
@@ -264,7 +274,7 @@ disReturn rDecoder(string binaryLine)
     return disassembleRet;
 }
 
-disReturn iDecoder(string binaryLine, string opcode)
+disReturn iDecoder(string binaryLine, string opcode, int lineNum)
 {
     string opcodeStr1;
     string opcodeStr2;
@@ -277,7 +287,9 @@ disReturn iDecoder(string binaryLine, string opcode)
     string immediateStr = binaryLine.substr(16, 16);
     int immNum;
     disReturn disassembleRet;
+    addressReturn addRet;
     opcodeReturn opcodeRet;
+    string addressStr;
     disassembleRet.returnLine = "";
 
     // Converts opcode into 2 hex characters for further assessment
@@ -303,7 +315,6 @@ disReturn iDecoder(string binaryLine, string opcode)
     // Finds the rs and rt strings, adds rt
     rsRet = registerVal(rs);
     rtRet = registerVal(rt);
-    disassembleRet.returnLine.append(" " + rtRet.returnLine);
 
     // Finds the immediate value
     immNum = immVal(immediateStr);
@@ -311,24 +322,59 @@ disReturn iDecoder(string binaryLine, string opcode)
     // Translates printAddress variable, also changes the address Offset to non-zero if the address must be printed
     if (opcodeRet.printAddress)
     {
+        addRet = addressStrForm(immNum, lineNum);
+        if (addRet.errorFound)
+        {
+            // If an error is found here the address is out of bounds
+            disassembleRet.errorFound = addRet.errorFound;
+            return disassembleRet;
+        }
+        disassembleRet.returnLine.append(" " + rsRet.returnLine);
+        disassembleRet.returnLine.append(", " + rtRet.returnLine);
         disassembleRet.printAddress = opcodeRet.printAddress;
+        disassembleRet.returnLine.append(", " + addRet.hexStr);
         disassembleRet.addressOffset = immNum;
     }
-
-    if (opcodeRet.offset == true)
+    else if (opcodeRet.offset == true)
     {
         // Adds the immediate value and rs in parenthesis
+        disassembleRet.returnLine.append(" " + rtRet.returnLine);
         disassembleRet.returnLine.append(", " + to_string(immNum));
         disassembleRet.returnLine.append("(" + rsRet.returnLine + ")");
     }
     else
     {
         // Normal format, just register, immediate
+        disassembleRet.returnLine.append(" " + rtRet.returnLine);
         disassembleRet.returnLine.append(", " + rsRet.returnLine);
         disassembleRet.returnLine.append(", " + to_string(immNum));
     }
 
     return disassembleRet;
+}
+
+addressReturn addressStrForm(int immNum, int lineNum)
+{
+    int offset;
+    stringstream stream;
+    addressReturn addRet;
+    addRet.hexStr = "Addr_";
+    // Finds the line offset than multiplies it by 4
+    offset = immNum + 1 + lineNum;
+    offset = offset * 4;
+    // Makes sure the offset is in range
+    if (offset>-32768 && offset<32767)
+    {
+        // Converts the offset to 4 digit hex
+        stream << setfill('0') << setw(4) << hex << offset;
+        addRet.hexStr.append(stream.str());
+    }
+    else
+    {
+        // Add error condition
+        addRet.errorFound = true;
+    }
+    return addRet;
 }
 
 
