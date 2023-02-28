@@ -480,7 +480,8 @@ int immVal(string immediateStr)
 {
     int immNum = 0;
     // Neg Condition
-    if (immediateStr[0] == 1)
+    cout << immediateStr << endl;
+    if (immediateStr[0] == '1')
     {
         // Goes through bottom 15 binary digits and makes them the positive value
         for (int i = 1; i < 16; i++)
@@ -490,8 +491,9 @@ int immVal(string immediateStr)
                 immNum = immNum + (int)(pow(2, (15 - i)));
             }
         }
-        // Subtracts positive value from 16 
-        immNum = 65536 - immNum;
+        // Subtracts positive value from 32768
+        cout << immNum << endl;
+        immNum = 32768 - immNum;
         // Makes value negative
         immNum = immNum * -1;
     }
@@ -513,7 +515,7 @@ int shamtVal(string shamt)
 {
     int shamtNum = 0;
     // Neg Condition
-    if (shamt[0] == 1)
+    if (shamt[0] == '1')
     {
         // Goes through bottom 4 binary digits and makes them the positive value
         for (int i = 1; i < 5; i++)
