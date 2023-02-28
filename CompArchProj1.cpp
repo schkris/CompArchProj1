@@ -9,10 +9,12 @@ int main()
     string fileName = "";
     string fileObj;
     string fileAsm;
-    string preFile;
+    string instructList;
+    string hexList;
     disReturn disassembleRet; // The disassembleLine function return struct (a bool and string)
     bool errorsPres = false; // If errors are present in the file set to true
-    int lineNum = 1; // Keeps track of the line number
+    int lineNum = 0; // Keeps track of the line number
+    int totalLines = 0; // Keeps track of number of lines
 
     // Prompts the user for the name of the file and stores it
     cout << "Please input the name of the .obj file: " << endl;
@@ -34,6 +36,13 @@ int main()
         return 1;
     }
 
+    /*while (getline(objStream, line))
+    {
+        totalLines++;
+    }
+    // Dynamically allocated array of printInstructs with a length of the total lines
+    printInstruct* instructLines = new printInstruct[totalLines];*/
+
     // Goes through each line in the obj file and uses disassembleLine() to disassemble 1 line at a time than prints it to the pre-file string
     while (std::getline(objStream, line))
     {
@@ -45,10 +54,17 @@ int main()
         }
         else
         {
-            preFile.append(disassembleRet.returnLine + "\n");
+            // Places the instructions into the array
+            //instructLines[lineNum].instruction = disassembleRet.returnLine;
+            if (disassembleRet.printAddress)
+            {
+                instructList.append("BRANCH\n"); // Probably not needed
+            }
+            instructList.append("\t"+disassembleRet.returnLine + "\n"); // Probably not needed
         }
         lineNum++;
     }
+
     //If an error is encountered the string is not translated to the .asm file
     if (disassembleRet.errorFound == false)
     {
@@ -60,8 +76,8 @@ int main()
         }
         else
         {
-            cout << preFile << endl;
-            asmStream << preFile;
+            cout << instructList << endl;
+            asmStream << instructList;
             asmStream.close();
         }
     }
@@ -290,6 +306,9 @@ disReturn iDecoder(string binaryLine, string opcode)
     // Finds the immediate value
     immNum = immVal(immediateStr);
     
+    // Translates printAddress variable
+    disassembleRet.printAddress = opcodeRet.printAddress;
+
     if (opcodeRet.offset == true)
     {
         // Adds the immediate value and rs in parenthesis
@@ -315,10 +334,12 @@ opcodeReturn hexOpcode(char hex1, char hex2)
         if (hex2 == '4') // 04
         {
             opcodeRet.returnLine = "beq";
+            opcodeRet.printAddress = true;
         }
         else if (hex2 == '5') // 05
         {
             opcodeRet.returnLine = "bne";
+            opcodeRet.printAddress = true;
         }
         else if (hex2 == '8') // 08
         {
