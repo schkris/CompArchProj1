@@ -9,6 +9,7 @@ int main()
     string fileName = "";
     string fileObj;
     string fileAsm;
+    string preFile;
     disReturn disassembleRet; // The disassembleLine function return struct (a bool and string)
     bool errorsPres = false; // If errors are present in the file set to true
     int lineNum = 1; // Keeps track of the line number
@@ -25,16 +26,15 @@ int main()
 
     // Opens fileObj to read from and fileAsm to write to
     ifstream objStream(fileObj);
-    ofstream asmStream(fileAsm);
 
     // If either of the files fail to open, returns this
-    if (!objStream.is_open() || !asmStream.is_open())
+    if (!objStream.is_open())
     {
-        cout << "Failed to open file!" << endl;
+        cout << "Failed to open .obj file!" << endl;
         return 1;
     }
 
-    // Goes through each line in the obj file and uses disassembleLine() to disassemble 1 line at a time than prints it to .asm file
+    // Goes through each line in the obj file and uses disassembleLine() to disassemble 1 line at a time than prints it to the pre-file string
     while (std::getline(objStream, line))
     {
         disassembleRet = disassembleLine(line);
@@ -45,13 +45,27 @@ int main()
         }
         else
         {
-            asmStream << disassembleRet.returnLine << endl;
+            preFile.append(disassembleRet.returnLine + "\n");
         }
         lineNum++;
     }
-
+    //If an error is encountered the string is not translated to the .asm file
+    if (disassembleRet.errorFound == false)
+    {
+        // If no errors are found, creates the .asm file and uploads the string to it
+        ofstream asmStream(fileAsm);
+        if (!asmStream.is_open())
+        {
+            cout << "Failed to open .asm file!" << endl;
+        }
+        else
+        {
+            cout << preFile << endl;
+            asmStream << preFile;
+            asmStream.close();
+        }
+    }
     // Closes out files and finishes program
-    asmStream.close();
     objStream.close();
     return 0;
 }
@@ -298,39 +312,39 @@ opcodeReturn hexOpcode(char hex1, char hex2)
     opcodeReturn opcodeRet;
     if (hex1 == '0')
     {
-        if (hex2 == '4')
+        if (hex2 == '4') // 04
         {
             opcodeRet.returnLine = "beq";
         }
-        else if (hex2 == '5')
+        else if (hex2 == '5') // 05
         {
             opcodeRet.returnLine = "bne";
         }
-        else if (hex2 == '8')
+        else if (hex2 == '8') // 08
         {
             opcodeRet.returnLine = "addi";
         }
-        else if (hex2 == '9')
+        else if (hex2 == '9') // 09
         {
             opcodeRet.returnLine = "addiu";
         }
-        else if (hex2 == 'a')
+        else if (hex2 == 'a') // 0a
         {
             opcodeRet.returnLine = "slti";
         }
-        else if (hex2 == 'b')
+        else if (hex2 == 'b') // 0b
         {
             opcodeRet.returnLine = "sltiu";
         }
-        else if (hex2 == 'c')
+        else if (hex2 == 'c') // 0c
         {
             opcodeRet.returnLine = "andi";
         }
-        else if (hex2 == 'd')
+        else if (hex2 == 'd') // 0d
         {
             opcodeRet.returnLine = "ori";
         }
-        else if (hex2 == 'f')
+        else if (hex2 == 'f') // 0f
         {
             opcodeRet.returnLine = "lui";
         }
@@ -342,27 +356,27 @@ opcodeReturn hexOpcode(char hex1, char hex2)
     }
     else if (hex1 == '2')
     {
-        if (hex2 == '3')
+        if (hex2 == '3')  // 23
         {
             opcodeRet.returnLine = "lw";
         }
-        else if (hex2 == '4')
+        else if (hex2 == '4')  // 24
         {
             opcodeRet.returnLine = "lbu";
         }
-        else if (hex2 == '5')
+        else if (hex2 == '5')   // 25
         {
             opcodeRet.returnLine = "lhu";
         }
-        else if (hex2 == '8')
+        else if (hex2 == '8')   // 26
         {
             opcodeRet.returnLine = "sb";
         }
-        else if (hex2 == '9')
+        else if (hex2 == '9')   // 27
         {
             opcodeRet.returnLine = "sh";
         }
-        else if (hex2 == 'b')
+        else if (hex2 == 'b')   // 28
         {
             opcodeRet.returnLine = "sw";
         }
@@ -375,11 +389,11 @@ opcodeReturn hexOpcode(char hex1, char hex2)
     }
     else if (hex1 == '3')
     {
-        if (hex2 == '0')
+        if (hex2 == '0')   // 30
         {
             opcodeRet.returnLine = "ll";
         }
-        else if (hex2 == '8')
+        else if (hex2 == '8')  // 38
         {
             opcodeRet.returnLine = "sc";
         }
@@ -480,7 +494,6 @@ int immVal(string immediateStr)
 {
     int immNum = 0;
     // Neg Condition
-    cout << immediateStr << endl;
     if (immediateStr[0] == '1')
     {
         // Goes through bottom 15 binary digits and makes them the positive value
@@ -492,7 +505,6 @@ int immVal(string immediateStr)
             }
         }
         // Subtracts positive value from 32768
-        cout << immNum << endl;
         immNum = 32768 - immNum;
         // Makes value negative
         immNum = immNum * -1;
