@@ -22,6 +22,13 @@ int main()
     cout << "Please input the name of the .obj file: " << endl;
     cin >> fileName;
 
+    // Allows the user to input file name with or without .obj at the end
+    int found = fileName.find(".");
+    if (found != string::npos)
+    {
+        fileName = fileName.substr(0,found);
+    }
+
     // Concatenates the string to obj and asm file
     fileObj.append(fileName);
     fileObj.append(".obj");
