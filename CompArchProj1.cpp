@@ -61,7 +61,7 @@ int main()
         {
             // Places the instructions into onlyInstructions string
             onlyInstructions.append("\t" + disassembleRet.returnLine + "\n");
-            // This makes a pair of the string for the address label and the line the label should occur on
+            // This makes a pair of the string for the address label and the line the label should occur on while removing duplicates
             if (disassembleRet.printAddress) 
             {
                 addressLineNum = disassembleRet.addressOffset + lineNum + 1;
@@ -91,6 +91,22 @@ int main()
             return 1;
         }
         asmStream << onlyInstructions;
+
+        /*while (getline(asmStream, line))
+        {
+            size_t addrPos = line.find("Addr_");
+            if (addrPos != std::string::npos) 
+            {
+                std::string address = line.substr(addrPos, 9);
+                if (labelMap.find(address) != labelMap.end()) 
+                {
+                    line.insert(addrPos, labelMap[address] + " ");
+                    line.erase(addrPos + labelMap[address].length() + 1, 9);
+                }
+            }
+            outfile << line << "\n";
+        }*/
+
         asmStream.close();
     }
     // Closes out files and finishes program
