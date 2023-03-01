@@ -15,9 +15,8 @@ int main()
     disReturn disassembleRet; // The disassembleLine function return struct (a bool and string)
     bool errorsPres = false; // If errors are present in the file set to true
     int lineNum = 0; // Keeps track of the line number
-    int totalLines = 0; // Keeps track of number of lines
-    int addressLineNum;
-    map<int, std::string> addMap;
+    int addressLineNum; // This holds the address line numbers calculated when an address is encountered at a given position
+    map<int, std::string> addMap; // Map holds pairs of addresses and lineNumbers
 
     // Prompts the user for the name of the file and stores it
     cout << "Please input the name of the .obj file: " << endl;
@@ -38,15 +37,6 @@ int main()
         cout << "Failed to open .obj file!" << endl;
         return 1;
     }
-
-    while (getline(objStream, line))
-    {
-        totalLines++;
-    }
-
-    // After going through file once to count the lines for the dynamic array we must clear and restart at the beginning
-    objStream.clear();
-    objStream.seekg(0, ios_base::beg);
 
     // Goes through each line in the obj file and uses disassembleLine() to find the addresses and labels
     while (getline(objStream, line))
@@ -395,41 +385,41 @@ opcodeReturn hexOpcode(char hex1, char hex2)
     {
         if (hex2 == '4') // 04
         {
-            opcodeRet.returnLine = "beq";
+            opcodeRet.returnLine = "beq   ";
             opcodeRet.printAddress = true;
         }
         else if (hex2 == '5') // 05
         {
-            opcodeRet.returnLine = "bne";
+            opcodeRet.returnLine = "bne   ";
             opcodeRet.printAddress = true;
         }
         else if (hex2 == '8') // 08
         {
-            opcodeRet.returnLine = "addi";
+            opcodeRet.returnLine = "addi  ";
         }
         else if (hex2 == '9') // 09
         {
-            opcodeRet.returnLine = "addiu";
+            opcodeRet.returnLine = "addiu ";
         }
         else if (hex2 == 'a') // 0a
         {
-            opcodeRet.returnLine = "slti";
+            opcodeRet.returnLine = "slti  ";
         }
         else if (hex2 == 'b') // 0b
         {
-            opcodeRet.returnLine = "sltiu";
+            opcodeRet.returnLine = "sltiu ";
         }
         else if (hex2 == 'c') // 0c
         {
-            opcodeRet.returnLine = "andi";
+            opcodeRet.returnLine = "andi  ";
         }
         else if (hex2 == 'd') // 0d
         {
-            opcodeRet.returnLine = "ori";
+            opcodeRet.returnLine = "ori   ";
         }
         else if (hex2 == 'f') // 0f
         {
-            opcodeRet.returnLine = "lui";
+            opcodeRet.returnLine = "lui   ";
         }
         else
         {
@@ -441,27 +431,27 @@ opcodeReturn hexOpcode(char hex1, char hex2)
     {
         if (hex2 == '3')  // 23
         {
-            opcodeRet.returnLine = "lw";
+            opcodeRet.returnLine = "lw    ";
         }
         else if (hex2 == '4')  // 24
         {
-            opcodeRet.returnLine = "lbu";
+            opcodeRet.returnLine = "lbu   ";
         }
         else if (hex2 == '5')   // 25
         {
-            opcodeRet.returnLine = "lhu";
+            opcodeRet.returnLine = "lhu   ";
         }
         else if (hex2 == '8')   // 26
         {
-            opcodeRet.returnLine = "sb";
+            opcodeRet.returnLine = "sb    ";
         }
         else if (hex2 == '9')   // 27
         {
-            opcodeRet.returnLine = "sh";
+            opcodeRet.returnLine = "sh    ";
         }
         else if (hex2 == 'b')   // 28
         {
-            opcodeRet.returnLine = "sw";
+            opcodeRet.returnLine = "sw    ";
         }
         else
         {
@@ -474,11 +464,11 @@ opcodeReturn hexOpcode(char hex1, char hex2)
     {
         if (hex2 == '0')   // 30
         {
-            opcodeRet.returnLine = "ll";
+            opcodeRet.returnLine = "ll    ";
         }
         else if (hex2 == '8')  // 38
         {
-            opcodeRet.returnLine = "sc";
+            opcodeRet.returnLine = "sc    ";
         }
         else
         {
@@ -659,11 +649,11 @@ functReturn findfunct(string funct)
     {
         if (hex2 == '0') // 0 / 00
         {
-            funct = "sll";
+            funct = "sll   ";
         }
         else if (hex2 == '2') // 0 / 02
         {
-            funct = "srl";
+            funct = "srl   ";
         }
         else
         {
@@ -676,39 +666,39 @@ functReturn findfunct(string funct)
     {
         if (hex2 == '0') // 0 / 20
         {
-            funct = "add";
+            funct = "add   ";
         }
         else if (hex2 == '1') // 0 / 21
         {
-            funct = "addu";
+            funct = "addu  ";
         }
         else if (hex2 == '2') // 0 / 22
         {
-            funct = "sub";
+            funct = "sub   ";
         }
         else if (hex2 == '3') // 0 / 23
         {
-            funct = "subu";
+            funct = "subu  ";
         }
         else if (hex2 == '4') // 0 / 24
         {
-            funct = "and";
+            funct = "and   ";
         }
         else if (hex2 == '5') // 0 / 25
         {
-            funct = "or";
+            funct = "or    ";
         }
         else if (hex2 == '7') // 0 / 27
         {
-            funct = "nor";
+            funct = "nor   ";
         }
         else if (hex2 == 'a') // 0 / 2a
         {
-            funct = "slt";
+            funct = "slt   ";
         }
         else if (hex2 == 'b') // 0 / 2b
         {
-            funct = "sltu";
+            funct = "sltu  ";
         }
         else
         {
