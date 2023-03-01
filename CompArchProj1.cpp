@@ -48,7 +48,7 @@ int main()
     objStream.clear();
     objStream.seekg(0, ios_base::beg);
 
-    // Goes through each line in the obj file and uses disassembleLine() to disassemble 1 line at a time than prints it to the pre-file string
+    // Goes through each line in the obj file and uses disassembleLine() to find the addresses and labels
     while (getline(objStream, line))
     {
         disassembleRet = disassembleLine(line, lineNum);
@@ -59,8 +59,6 @@ int main()
         }
         else
         {
-            // Places the instructions into onlyInstructions string
-            onlyInstructions.append("\t" + disassembleRet.returnLine + "\n");
             // This makes a pair of the string for the address label and the line the label should occur on while removing duplicates
             if (disassembleRet.printAddress) 
             {
@@ -76,11 +74,6 @@ int main()
         lineNum++;
     }
 
-    for (const auto& pair : addMap) 
-    {
-        std::cout << pair.first << " " << pair.second << std::endl;
-    }
-
     //If an error is encountered the string is not translated to the .asm file
     if (disassembleRet.errorFound == false)
     {
@@ -90,23 +83,24 @@ int main()
             cout << "Failed to open .asm file!" << endl;
             return 1;
         }
-        asmStream << onlyInstructions;
 
-        /*while (getline(asmStream, line))
+        // Finally goes through input file and pieces together output file
+        objStream.clear();
+        objStream.seekg(0, ios_base::beg);
+        lineNum = 0;
+        while (getline(objStream, line))
         {
-            size_t addrPos = line.find("Addr_");
-            if (addrPos != std::string::npos) 
+            disassembleRet = disassembleLine(line, lineNum);
+            for (const auto& pair : addMap)
             {
-                std::string address = line.substr(addrPos, 9);
-                if (labelMap.find(address) != labelMap.end()) 
+                if (pair.first == lineNum)
                 {
-                    line.insert(addrPos, labelMap[address] + " ");
-                    line.erase(addrPos + labelMap[address].length() + 1, 9);
+                    asmStream << pair.second << ":\n";
                 }
             }
-            outfile << line << "\n";
-        }*/
-
+            lineNum++;
+            asmStream << "\t" << disassembleRet.returnLine << "\n";
+        }
         asmStream.close();
     }
     // Closes out files and finishes program
